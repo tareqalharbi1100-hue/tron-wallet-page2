@@ -1,0 +1,107 @@
+<!DOCTYPE html><html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>محفظة TRON</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      direction: rtl;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #1f1f1f;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+      background-color: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .address-box {
+      background: #eee;
+      padding: 10px;
+      font-weight: bold;
+      overflow-wrap: break-word;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: right;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>معلومات محفظة TRON</h1>
+  </header>  <div class="container">
+    <h2>عنوان المحفظة:</h2>
+    <div class="address-box" id="wallet-address">TKXCfDEa5H82S7DCAypdeKpgpZuXqLyHVd</div><h2>الرصيد:</h2>
+<p id="balance">جارٍ التحميل...</p>
+
+<h2>آخر المعاملات:</h2>
+<table>
+  <thead>
+    <tr>
+      <th>نوع المعاملة</th>
+      <th>المبلغ</th>
+      <th>من</th>
+      <th>إلى</th>
+      <th>الوقت</th>
+    </tr>
+  </thead>
+  <tbody id="transactions">
+    <tr><td colspan="5">جارٍ التحميل...</td></tr>
+  </tbody>
+</table>
+
+  </div>  <script>
+    const address = 'TKXCfDEa5H82S7DCAypdeKpgpZuXqLyHVd';
+
+    async function fetchData() {
+      try {
+        const res1 = await fetch(`https://api.trongrid.io/v1/accounts/${address}`);
+        const data1 = await res1.json();
+        const balance = (data1.data[0].balance || 0) / 1e6;
+        document.getElementById('balance').textContent = balance + ' TRX';
+
+        const res2 = await fetch(`https://api.trongrid.io/v1/accounts/${address}/transactions?limit=10&only_confirmed=true`);
+        const data2 = await res2.json();
+        const rows = data2.data.map(tx => {
+          const type = tx.raw_data.contract[0].type;
+          const amount = (tx.raw_data.contract[0].parameter.value.amount || 0) / 1e6;
+          const from = tx.raw_data.contract[0].parameter.value.owner_address;
+          const to = tx.raw_data.contract[0].parameter.value.to_address;
+          const time = new Date(tx.block_timestamp).toLocaleString();
+          return `<tr>
+            <td>${type}</td>
+            <td>${amount}</td>
+            <td>${from}</td>
+            <td>${to}</td>
+            <td>${time}</td>
+          </tr>`;
+        }).join('');
+        document.getElementById('transactions').innerHTML = rows || '<tr><td colspan="5">لا توجد معاملات</td></tr>';
+      } catch (error) {
+        document.getElementById('balance').textContent = 'خطأ في تحميل الرصيد';
+        document.getElementById('transactions').innerHTML = '<tr><td colspan="5">خطأ في تحميل المعاملات</td></tr>';
+      }
+    }
+
+    fetchData();
+  </script></body>
+  </html>
